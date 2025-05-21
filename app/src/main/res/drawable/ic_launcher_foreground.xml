@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Modern Note Paper with Gradient -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,28L80,28A4,4 0,0 1,84 32L84,80A4,4 0,0 1,80 84L28,84A4,4 0,0 1,24 80L24,32A4,4 0,0 1,28 28z"/>
+    
+    <!-- Smart Note Indicator (Purple Wave) -->
+    <path
+        android:fillColor="@color/ic_launcher_background"
+        android:pathData="M28,28L84,28A4,4 0,0 1,88 32L88,36C88,36 82,40 76,36C70,32 64,40 58,36C52,32 46,40 40,36C34,32 28,36 28,36L28,32A4,4 0,0 1,28 28z"/>
+    
+    <!-- Minimalist Lines with Smart Spacing -->
+    <path
+        android:strokeColor="#E8E8E8"
+        android:strokeWidth="1.2"
+        android:pathData="M36,48L76,48M36,56L76,56M36,64L76,64M36,72L76,72"/>
+    
+    <!-- Modern AI Indicator (Minimalist Brain) -->
+    <path
+        android:fillColor="@color/ic_launcher_accent"
+        android:pathData="M54,40C54,40 58,42 58,46C58,50 54,52 54,52C54,52 50,50 50,46C50,42 54,40 54,40Z"/>
+    
+    <!-- Smart Connection Points -->
+    <path
+        android:fillColor="@color/ic_launcher_accent"
+        android:pathData="M54,36L54,36A1,1 0,0 1,55 37L55,37A1,1 0,0 1,54 38L54,38A1,1 0,0 1,53 37L53,37A1,1 0,0 1,54 36zM54,54L54,54A1,1 0,0 1,55 55L55,55A1,1 0,0 1,54 56L54,56A1,1 0,0 1,53 55L53,55A1,1 0,0 1,54 54z"/>
+</vector>

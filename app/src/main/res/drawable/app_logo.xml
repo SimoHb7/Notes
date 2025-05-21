@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="@color/purple_500"
+        android:pathData="M54,54m-48,0a48,48 0,1 1,96 0a48,48 0,1 1,-96 0"/>
+
+    <!-- Note paper -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M38,34L70,34A2,2 0,0 1,72 36L72,72A2,2 0,0 1,70 74L38,74A2,2 0,0 1,36 72L36,36A2,2 0,0 1,38 34z"/>
+
+    <!-- Note lines -->
+    <path
+        android:fillColor="@color/purple_200"
+        android:pathData="M42,42L66,42A1,1 0,0 1,67 43L67,45A1,1 0,0 1,66 46L42,46A1,1 0,0 1,41 45L41,43A1,1 0,0 1,42 42z"/>
+    <path
+        android:fillColor="@color/purple_200"
+        android:pathData="M42,50L66,50A1,1 0,0 1,67 51L67,53A1,1 0,0 1,66 54L42,54A1,1 0,0 1,41 53L41,51A1,1 0,0 1,42 50z"/>
+    <path
+        android:fillColor="@color/purple_200"
+        android:pathData="M42,58L66,58A1,1 0,0 1,67 59L67,61A1,1 0,0 1,66 62L42,62A1,1 0,0 1,41 61L41,59A1,1 0,0 1,42 58z"/>
+
+    <!-- AI Circuit lines -->
+    <path
+        android:strokeColor="@color/white"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M30,30L38,38M70,30L62,38M30,78L38,70M70,78L62,70"/>
+
+    <!-- AI Dots -->
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M30,30m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M70,30m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M30,78m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <path
+        android:fillColor="@color/white"
+        android:pathData="M70,78m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+
+</vector> 
