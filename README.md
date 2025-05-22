@@ -81,30 +81,88 @@ dependencies {
 
 ### Structure du Projet
 ```
-app/
-├── java/
-│   └── com.example.notes/
-│       ├── activities/
-│       │   ├── MainActivity.java
-│       │   └── CreateNoteActivity.java
-│       ├── api/
-│       │   ├── ApiService.java
-│       │   └── RetrofitClient.java
-│       ├── models/
-│       │   └── Note.java
-│       └── utils/
-│           └── NetworkUtils.java
-└── res/
-    ├── layout/
-    ├── values/
-    └── drawable/
+Ai-Notes/
+├── app/                              # Application Android
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/com/example/notes/
+│   │       │   ├── adapter/         # Adaptateurs pour les RecyclerViews
+│   │       │   ├── api/            # Services API et configuration Retrofit
+│   │       │   ├── data/           # Sources de données et repositories
+│   │       │   ├── models/         # Modèles de données
+│   │       │   ├── navigation/     # Navigation et routing
+│   │       │   ├── ui/            # Composants d'interface utilisateur
+│   │       │   ├── utils/         # Utilitaires généraux
+│   │       │   ├── util/          # Classes utilitaires spécifiques
+│   │       │   ├── CreateNoteActivity.java
+│   │       │   ├── LoginActivity.java
+│   │       │   ├── MainActivity.java
+│   │       │   ├── NotesApplication.java
+│   │       │   ├── RegisterActivity.java
+│   │       │   └── SplashActivity.java
+│   │       ├── res/                # Ressources Android
+│   │       │   ├── drawable/      # Images et icônes
+│   │       │   ├── layout/        # Layouts XML
+│   │       │   └── values/        # Strings, couleurs, styles
+│   │       └── AndroidManifest.xml
+│   └── build.gradle                # Configuration Gradle de l'app
+├── backend/                        # Backend Node.js
+│   ├── models/                    # Modèles de données
+│   ├── routes/                    # Routes API
+│   ├── middleware/                # Middleware d'authentification
+│   ├── server.js                  # Point d'entrée du serveur
+│   └── database.sql               # Schéma de la base de données
+├── gradle/                        # Wrapper Gradle
+├── .gradle/                       # Cache Gradle
+├── .idea/                         # Configuration Android Studio
+├── build/                         # Dossier de build
+├── build.gradle.kts              # Configuration Gradle du projet
+├── settings.gradle.kts           # Paramètres Gradle
+├── gradle.properties             # Propriétés Gradle
+├── local.properties              # Configuration locale
+└── README.md                     # Documentation
 ```
 
 ### Composants Principaux
-- **Activities** : Gestion de l'interface utilisateur
-- **API Service** : Communication avec le backend
+
+#### Frontend (Android)
+- **Activities** : Interface utilisateur principale
+  - `MainActivity` : Liste des notes
+  - `CreateNoteActivity` : Création/édition de notes
+  - `LoginActivity` : Authentification
+  - `RegisterActivity` : Inscription
+  - `SplashActivity` : Écran de démarrage
+
+- **API** : Communication avec le backend
+  - Services REST
+  - Configuration Retrofit
+  - Gestion des erreurs
+
 - **Models** : Structure des données
-- **Utils** : Fonctions utilitaires
+  - Note
+  - User
+  - Autres modèles de données
+
+- **UI Components** : Composants réutilisables
+  - Adaptateurs pour les listes
+  - Composants de navigation
+  - Vues personnalisées
+
+#### Backend (Node.js)
+- **Server** : Serveur Express.js
+  - Gestion des requêtes HTTP
+  - Middleware d'authentification
+  - Routes API
+
+- **Database** : Base de données SQL
+  - Tables pour les notes et utilisateurs
+  - Schéma optimisé
+  - Migrations
+
+- **API Endpoints**
+  - Authentification
+  - CRUD des notes
+  - Gestion des utilisateurs
 
 ## Fonctionnalités Détaillées
 

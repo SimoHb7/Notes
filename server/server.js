@@ -8,11 +8,9 @@ const auth = require('./middleware/auth');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
-// Database connection
 const pool = new Pool({
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -21,7 +19,6 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD
 });
 
-// Test database connection
 pool.connect((err, client, release) => {
     if (err) {
         console.error('Error connecting to the database:', err);
@@ -31,13 +28,10 @@ pool.connect((err, client, release) => {
     }
 });
 
-// Root route for testing
 app.get('/', (req, res) => {
     res.json({ message: 'Notes API is running' });
 });
 
-// Routes
-// Get all notes for the authenticated user
 app.get('/api/notes', auth, async (req, res) => {
     try {
         const result = await pool.query(
@@ -51,7 +45,6 @@ app.get('/api/notes', auth, async (req, res) => {
     }
 });
 
-// Get single note (only if it belongs to the authenticated user)
 app.get('/api/notes/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
@@ -71,7 +64,6 @@ app.get('/api/notes/:id', auth, async (req, res) => {
     }
 });
 
-// Create note (with user_id from authenticated user)
 app.post('/api/notes', auth, async (req, res) => {
     try {
         const { title, content } = req.body;
@@ -92,7 +84,6 @@ app.post('/api/notes', auth, async (req, res) => {
     }
 });
 
-// Update note (only if it belongs to the authenticated user)
 app.put('/api/notes/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
@@ -102,7 +93,6 @@ app.put('/api/notes/:id', auth, async (req, res) => {
             return res.status(400).json({ error: 'Title and content are required' });
         }
         
-        // First check if note exists and belongs to user
         const noteCheck = await pool.query(
             'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
@@ -124,12 +114,10 @@ app.put('/api/notes/:id', auth, async (req, res) => {
     }
 });
 
-// Delete note (only if it belongs to the authenticated user)
 app.delete('/api/notes/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
         
-        // First check if note exists and belongs to user
         const noteCheck = await pool.query(
             'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
             [id, req.user.id]

@@ -3,7 +3,6 @@ const router = express.Router();
 const pool = require('../db');
 const auth = require('../middleware/auth');
 
-// Get all notes for a user
 router.get('/', auth, async (req, res) => {
     try {
         const { rows } = await pool.query(
@@ -17,12 +16,10 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-// Create a new note
 router.post('/', auth, async (req, res) => {
     try {
         const { title, content, category, priority, due_date } = req.body;
         
-        // Validate required fields
         if (!title || !content) {
             return res.status(400).json({ error: 'Title and content are required' });
         }
@@ -42,13 +39,11 @@ router.post('/', auth, async (req, res) => {
     }
 });
 
-// Update a note
 router.put('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
         const { title, content, category, priority, due_date } = req.body;
 
-        // First check if note exists and belongs to user
         const noteCheck = await pool.query(
             'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
@@ -58,7 +53,6 @@ router.put('/:id', auth, async (req, res) => {
             return res.status(404).json({ error: 'Note not found' });
         }
 
-        // Update the note
         const { rows } = await pool.query(
             `UPDATE notes 
             SET title = $1, 
@@ -79,12 +73,10 @@ router.put('/:id', auth, async (req, res) => {
     }
 });
 
-// Delete a note
 router.delete('/:id', auth, async (req, res) => {
     try {
         const { id } = req.params;
 
-        // First check if note exists and belongs to user
         const noteCheck = await pool.query(
             'SELECT * FROM notes WHERE id = $1 AND user_id = $2',
             [id, req.user.id]
