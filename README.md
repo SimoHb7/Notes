@@ -43,6 +43,8 @@ Une application Android moderne et intuitive pour la prise de notes, enrichie de
 
 ### Prérequis
 - Android 6.0 (API level 23) ou supérieur
+- Node.js 14.0 ou supérieur
+- PostgreSQL 12.0 ou supérieur
 - Connexion Internet pour les fonctionnalités en ligne
 - Microphone pour la reconnaissance vocale
 - Autorisations :
@@ -111,7 +113,9 @@ Ai-Notes/
 │   ├── routes/                    # Routes API
 │   ├── middleware/                # Middleware d'authentification
 │   ├── server.js                  # Point d'entrée du serveur
-│   └── database.sql               # Schéma de la base de données
+│   ├── config/                    # Configuration de la base de données
+│   │   └── database.js           # Configuration PostgreSQL
+│   └── migrations/               # Migrations de la base de données
 ├── gradle/                        # Wrapper Gradle
 ├── .gradle/                       # Cache Gradle
 ├── .idea/                         # Configuration Android Studio
@@ -154,10 +158,16 @@ Ai-Notes/
   - Middleware d'authentification
   - Routes API
 
-- **Database** : Base de données SQL
-  - Tables pour les notes et utilisateurs
+- **Database** : PostgreSQL
+  - Configuration Sequelize ORM
+  - Migrations automatisées
   - Schéma optimisé
-  - Migrations
+  - Tables :
+    - users (id, email, password_hash, created_at, updated_at)
+    - notes (id, title, content, user_id, created_at, updated_at)
+    - summaries (id, note_id, content, created_at)
+  - Relations et contraintes d'intégrité
+  - Indexation optimisée
 
 - **API Endpoints**
   - Authentification
