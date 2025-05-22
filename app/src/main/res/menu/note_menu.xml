@@ -11,4 +11,9 @@
         android:icon="@android:drawable/ic_menu_delete"
         android:title="Supprimer"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_clear_cache"
+        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:title="Vider le cache"
+        app:showAsAction="never" />
 </menu> 

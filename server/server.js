@@ -138,7 +138,6 @@ app.delete('/api/notes/:id', auth, async (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
-// Start server
 app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`);
     console.log(`Test the API at: http://localhost:${port}/api/notes`);

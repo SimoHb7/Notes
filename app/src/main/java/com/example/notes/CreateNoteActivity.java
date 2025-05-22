@@ -49,6 +49,7 @@ public class CreateNoteActivity extends AppCompatActivity {
     private static final int SPEECH_REQUEST_CODE = 0;
     private static final String COHERE_API_URL = "https://api.cohere.ai/v1/summarize";
     private static final String COHERE_API_KEY = "tZg7bj2rRrUHSUL6uWepa0klO7dKugPzKG7VKlCq"; // clé API gratuite
+    private static final String CACHE_PREFS_NAME = "NoteSummaries";
     
     private EditText titleEditText;
     private EditText contentEditText;
@@ -87,7 +88,7 @@ public class CreateNoteActivity extends AppCompatActivity {
         }
 
         // Initialize SharedPreferences for caching
-        prefs = getSharedPreferences("NoteSummaries", MODE_PRIVATE);
+        prefs = getSharedPreferences(CACHE_PREFS_NAME, MODE_PRIVATE);
 
         // Initialize OkHttpClient with longer timeouts
         client = new OkHttpClient.Builder()
@@ -118,125 +119,111 @@ public class CreateNoteActivity extends AppCompatActivity {
             showDeleteConfirmationDialog();
             return true;
         } else if (id == R.id.action_summarize) {
-            summarizeContent();
+            showSummaryForContent();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void summarizeContent() {
+    private void showSummaryForContent() {
         String content = contentEditText.getText().toString().trim();
         if (content.isEmpty()) {
             Toast.makeText(this, "Aucun contenu à résumer", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Show progress dialog
         showProgressDialog("Génération du résumé...");
 
-        // Pour les textes courts, utiliser le résumé local
-        if (content.length() < 200) {
-            String summary = generateSimpleSummary(content);
-            hideProgressDialog();
-            showSummaryDialog(summary);
+        generateSummaryAsync(content, new SummaryCallback() {
+            @Override
+            public void onSummaryGenerated(String summary) {
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    showSummaryDialog(summary);
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    Toast.makeText(CreateNoteActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                });
+            }
+        });
+    }
+
+    private String detectLanguage(String text) {
+        // Détection améliorée basée sur les caractères et mots communs
+        if (text == null || text.isEmpty()) return "fr";
+        
+        // Comptage des caractères et mots spécifiques au français
+        int frenchScore = 0;
+        int englishScore = 0;
+        
+        // Caractères spécifiques au français
+        String frenchChars = "éèêëàâçîïôöûüù";
+        // Mots communs en français
+        String[] frenchWords = {"le", "la", "les", "un", "une", "des", "et", "est", "dans", "pour", "avec", "sans", "sur", "sous", "par", "que", "qui", "quoi", "où", "quand", "comment", "pourquoi"};
+        // Mots communs en anglais
+        String[] englishWords = {"the", "a", "an", "and", "is", "in", "for", "with", "without", "on", "under", "by", "that", "which", "what", "where", "when", "how", "why"};
+        
+        // Vérifier les caractères spéciaux
+        for (char c : text.toLowerCase().toCharArray()) {
+            if (frenchChars.indexOf(c) != -1) {
+                frenchScore += 2; // Donner plus de poids aux caractères spéciaux
+            }
+        }
+        
+        // Vérifier les mots communs
+        String[] words = text.toLowerCase().split("\\s+");
+        for (String word : words) {
+            word = word.replaceAll("[^a-zéèêëàâçîïôöûüù]", "");
+            if (word.length() > 1) { // Ignorer les mots trop courts
+                for (String frenchWord : frenchWords) {
+                    if (word.equals(frenchWord)) {
+                        frenchScore++;
+                        break;
+                    }
+                }
+                for (String englishWord : englishWords) {
+                    if (word.equals(englishWord)) {
+                        englishScore++;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Ajouter un biais vers le français si le texte contient des caractères spéciaux
+        if (frenchScore > 0) {
+            frenchScore += 5;
+        }
+        
+        return frenchScore >= englishScore ? "fr" : "en";
+    }
+
+    private void generateSummaryAsync(String content, SummaryCallback callback) {
+        if (content == null || content.trim().isEmpty()) {
+            callback.onSummaryGenerated("");
             return;
         }
 
-        // Pour les textes plus longs, utiliser l'API
-        try {
-            JSONObject jsonBody = new JSONObject();
-            jsonBody.put("text", content);
-            jsonBody.put("length", "short");
-            jsonBody.put("format", "paragraph");
-            jsonBody.put("model", "summarize-xlarge");
-            jsonBody.put("extractiveness", "high");
-            jsonBody.put("temperature", 0.1);
-            jsonBody.put("additional_command", "Crée un résumé concis en français qui capture les points essentiels. Commence directement par le contenu, sans phrases d'introduction.");
+        String trimmedContent = content.trim();
+        String detectedLanguage = detectLanguage(trimmedContent);
+        String cacheKey = trimmedContent.hashCode() + "_" + detectedLanguage;
 
-            RequestBody body = RequestBody.create(
-                MediaType.parse("application/json"), 
-                jsonBody.toString()
-            );
-
-            Request request = new Request.Builder()
-                .url(COHERE_API_URL)
-                .addHeader("Authorization", "Bearer " + COHERE_API_KEY)
-                .addHeader("Content-Type", "application/json")
-                .post(body)
-                .build();
-
-            client.newCall(request).enqueue(new okhttp3.Callback() {
-                @Override
-                public void onFailure(okhttp3.Call call, IOException e) {
-                    Log.e(TAG, "API call failed", e);
-                    runOnUiThread(() -> {
-                        hideProgressDialog();
-                        String fallbackSummary = generateSimpleSummary(content);
-                        showSummaryDialog(fallbackSummary);
-                        Toast.makeText(CreateNoteActivity.this, 
-                            "Utilisation du résumé local (API non disponible)", 
-                            Toast.LENGTH_LONG).show();
-                    });
-                }
-
-                @Override
-                public void onResponse(okhttp3.Call call, okhttp3.Response response) {
-                    try {
-                        if (!response.isSuccessful()) {
-                            throw new IOException("API error: " + response.code());
-                        }
-
-                        String responseString = response.body().string();
-                        JSONObject jsonResponse = new JSONObject(responseString);
-                        
-                        String summary;
-                        if (jsonResponse.has("summary")) {
-                            summary = jsonResponse.getString("summary").trim();
-                        } else if (jsonResponse.has("generations")) {
-                            summary = jsonResponse.getJSONArray("generations")
-                                .getJSONObject(0)
-                                .getString("text")
-                                .trim();
-                        } else {
-                            throw new IOException("Format de réponse invalide");
-                        }
-
-                        // Nettoyer le résumé
-                        summary = cleanSummary(summary);
-                        
-                        // Vérifier si le résumé est valide
-                        if (summary.length() >= content.length() * 0.9 || 
-                            summary.length() < content.length() * 0.1) {
-                            throw new IOException("Résumé invalide");
-                        }
-
-                        final String finalSummary = summary;
-                        runOnUiThread(() -> {
-                            hideProgressDialog();
-                            showSummaryDialog(finalSummary);
-                        });
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error processing response", e);
-                        runOnUiThread(() -> {
-                            hideProgressDialog();
-                            String fallbackSummary = generateSimpleSummary(content);
-                            showSummaryDialog(fallbackSummary);
-                            Toast.makeText(CreateNoteActivity.this, 
-                                "Utilisation du résumé local (erreur de traitement)", 
-                                Toast.LENGTH_LONG).show();
-                        });
-                    }
-                }
-            });
-        } catch (Exception e) {
-            Log.e(TAG, "Error preparing request", e);
-            hideProgressDialog();
-            String fallbackSummary = generateSimpleSummary(content);
-            showSummaryDialog(fallbackSummary);
-            Toast.makeText(this, 
-                "Utilisation du résumé local (erreur de préparation)", 
-                Toast.LENGTH_LONG).show();
+        // Check cache
+        String cachedSummary = prefs.getString(cacheKey, null);
+        if (cachedSummary != null) {
+            callback.onSummaryGenerated(cachedSummary);
+            return;
         }
+
+        // For all texts, use local summary only (API disabled due to unavailability)
+        String summary = generateSimpleSummary(trimmedContent);
+        prefs.edit().putString(cacheKey, summary).apply();
+        callback.onSummaryGenerated(summary);
     }
 
     private String generateSimpleSummary(String content) {
@@ -384,36 +371,82 @@ public class CreateNoteActivity extends AppCompatActivity {
             return;
         }
 
-        String summary = generateSummary(content);
-        Date currentDate = new Date();
+        showProgressDialog("Génération du résumé...");
 
-        Note note;
-        if (existingNote != null) {
-            // Update existing note
-            existingNote.setTitle(title);
-            existingNote.setContent(content);
-            existingNote.setSummary(summary);
-            existingNote.setUpdatedAt(currentDate);
-            note = existingNote;
-        } else {
-            // Create new note
-            note = new Note(title, content, summary);
-        }
+        generateSummaryAsync(content, new SummaryCallback() {
+            @Override
+            public void onSummaryGenerated(String summary) {
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    Date currentDate = new Date();
 
-        // Show progress dialog
-        progressDialog = new AlertDialog.Builder(this)
-            .setTitle("Enregistrement")
-            .setMessage("Veuillez patienter...")
-            .setCancelable(false)
-            .create();
-        progressDialog.show();
+                    Note note;
+                    if (existingNote != null) {
+                        // Update existing note
+                        existingNote.setTitle(title);
+                        existingNote.setContent(content);
+                        existingNote.setSummary(summary);
+                        existingNote.setUpdatedAt(currentDate);
+                        note = existingNote;
+                    } else {
+                        // Create new note
+                        note = new Note(title, content, summary);
+                    }
 
-        // Save to API
-        if (existingNote != null) {
-            updateNote(note);
-        } else {
-            createNote(note);
-        }
+                    // Show progress dialog for saving
+                    progressDialog = new AlertDialog.Builder(CreateNoteActivity.this)
+                        .setTitle("Enregistrement")
+                        .setMessage("Veuillez patienter...")
+                        .setCancelable(false)
+                        .create();
+                    progressDialog.show();
+
+                    // Save to API
+                    if (existingNote != null) {
+                        updateNote(note);
+                    } else {
+                        createNote(note);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                runOnUiThread(() -> {
+                    hideProgressDialog();
+                    Toast.makeText(CreateNoteActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+
+                    // Fallback to simple summary
+                    String fallbackSummary = generateSimpleSummary(content);
+                    Date currentDate = new Date();
+
+                    Note note;
+                    if (existingNote != null) {
+                        existingNote.setTitle(title);
+                        existingNote.setContent(content);
+                        existingNote.setSummary(fallbackSummary);
+                        existingNote.setUpdatedAt(currentDate);
+                        note = existingNote;
+                    } else {
+                        note = new Note(title, content, fallbackSummary);
+                    }
+
+                    // Show progress dialog for saving
+                    progressDialog = new AlertDialog.Builder(CreateNoteActivity.this)
+                        .setTitle("Enregistrement")
+                        .setMessage("Veuillez patienter...")
+                        .setCancelable(false)
+                        .create();
+                    progressDialog.show();
+
+                    if (existingNote != null) {
+                        updateNote(note);
+                    } else {
+                        createNote(note);
+                    }
+                });
+            }
+        });
     }
 
     private void createNote(Note note) {
@@ -588,38 +621,39 @@ public class CreateNoteActivity extends AppCompatActivity {
         }
     }
 
-    private String generateSummary(String content) {
-        if (content == null || content.isEmpty()) {
-            return "";
-        }
+    // Remove the old generateSummary method since we now use async summary generation
+    // private String generateSummary(String content) {
+    //     if (content == null || content.isEmpty()) {
+    //         return "";
+    //     }
 
-        // Remove extra whitespace and newlines
-        content = content.trim().replaceAll("\\s+", " ");
+    //     // Remove extra whitespace and newlines
+    //     content = content.trim().replaceAll("\\s+", " ");
 
-        // If content is already short, return it as is
-        if (content.length() <= 100) {
-            return content;
-        }
+    //     // If content is already short, return it as is
+    //     if (content.length() <= 100) {
+    //         return content;
+    //     }
 
-        // Find the last complete sentence within 100 characters
-        int endIndex = 100;
-        while (endIndex < content.length() && endIndex < 150) {
-            char c = content.charAt(endIndex);
-            if (c == '.' || c == '!' || c == '?') {
-                endIndex++;
-                break;
-            }
-            endIndex++;
-        }
+    //     // Find the last complete sentence within 100 characters
+    //     int endIndex = 100;
+    //     while (endIndex < content.length() && endIndex < 150) {
+    //         char c = content.charAt(endIndex);
+    //         if (c == '.' || c == '!' || c == '?') {
+    //             endIndex++;
+    //             break;
+    //         }
+    //         endIndex++;
+    //     }
 
-        // Get the summary and add ellipsis if needed
-        String summary = content.substring(0, endIndex).trim();
-        if (endIndex < content.length()) {
-            summary += "...";
-        }
+    //     // Get the summary and add ellipsis if needed
+    //     String summary = content.substring(0, endIndex).trim();
+    //     if (endIndex < content.length()) {
+    //         summary += "...";
+    //     }
 
-        return summary;
-    }
+    //     return summary;
+    // }
 
     private void initializeViews() {
         try {
@@ -857,4 +891,9 @@ public class CreateNoteActivity extends AppCompatActivity {
             Log.e(TAG, "onDestroy: Error destroying activity", e);
         }
     }
-} 
+
+    private interface SummaryCallback {
+        void onSummaryGenerated(String summary);
+        void onError(String errorMessage);
+    }
+}
